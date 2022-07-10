@@ -26,9 +26,9 @@ def set_optimizer(model):
                                 lr=args['learning_rate'],
                                 weight_decay=args['weight_decay'])
     # TODO: add scheduler
-    return optimizer
+    scheduler = None
 
-    # args, model = setup(args)
+    return optimizer, scheduler
 
 
 def main():
@@ -53,17 +53,17 @@ def main():
                             pin_memory=True)
 
     model = set_model()
-    optimizer = set_optimizer(model=model)
+    optimizer, scheduler = set_optimizer(model=model)
 
     trainProcess(
         model,
         optimizer,
+        scheduler,
         trainloader,
         testloader,
-        max_epoch,
-        snapshot_dir,
-        is_first
+        args['snapshot_dir']
     )
+
 
 if __name__ == "__main__":
     main()
