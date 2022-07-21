@@ -23,9 +23,16 @@ def valid(model, testloader):
             loss = 1000*nn.MSELoss()(dmos[k], loss)
             test_loss.append(loss)
 
-    # results = np.array(results, dtype=float)
-    results = torch.as_tensor(results, dtype=float)
+    # results = np.array(results)
+
+    print(results)
+    results = np.array(results, dtype=np.float)
+    results = [[a,b] for [a, b] in results]
+    # results = results.type('torch.FloatTensor')
+    # results = torch.as_tensor(results, dtype=float)
+
     lcc = np.corrcoef(results, rowvar=False)[0][1]
+    results = torch.tensor(results, dtype=torch.float)
     dmoss, preds = results[:, 0], results[:, 1]
     plcc = scipy.stats.pearsonr(dmoss, preds)[0]
     srocc = scipy.stats.spearmanr(dmoss, preds)[0]

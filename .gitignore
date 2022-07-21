@@ -2,3 +2,6 @@ __pycache__
 .idea
 data/
 data-triq-yunjeong.zip
+pretrained_weights
+*.npz
+*.h5

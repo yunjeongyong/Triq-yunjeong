@@ -1,9 +1,8 @@
 import torch
 
-from iqa_data_utils import main
 from torch import nn
 from iqa_args import args
-from iqa_val import valid
+from trains.iqa_val import valid
 import os
 
 
@@ -14,10 +13,14 @@ def snapshot(model, testloader, epoch, step, snapshot_dir, prefix=''):
     plcc = val_dict['plcc']
     test_loss = val_dict['test_loss']
 
+    model_to_save = model.module if hasattr(model, 'module') else model
+    model_checkpoint = os.path.join(args['output_dir'], "%s_checkpoint.bin" % args['name'])
+    # torch.save(model_to_save.state_dict(), model_checkpoint)
+
     snapshot = {
         'epoch': epoch,
         'step': step,
-        'model': model.module.state_dict(),
+        'model': model_to_save.state_dict(),
         'lcc': lcc,
         'srocc': srocc,
         'plcc': plcc
@@ -41,14 +44,12 @@ def snapshot(model, testloader, epoch, step, snapshot_dir, prefix=''):
                 'pred': val_dict['pre_array'],
                 'gt': val_dict['gt_array'],
                 'img': val_dict['img'],
-                'error': val_dict['error'],
-                'senMap': val_dict['senMap']
                 }
 
     return out_dict
 
 
-def trainProcess(model, optimizer, scheduler, trainloader, testloader, snapshot_dir, prefix=''):
+def trainProcess(model, optimizer, scheduler, t_total, trainloader, testloader, snapshot_dir, prefix=''):
 
     epochs = args['epoch']
 
@@ -58,8 +59,12 @@ def trainProcess(model, optimizer, scheduler, trainloader, testloader, snapshot_
 
         for step, (img, dmos) in enumerate(trainloader):
 
+
             img = torch.tensor(img, device='cuda', requires_grad=True, dtype=torch.float)
             dmos = torch.tensor(dmos, device='cuda', requires_grad=True, dtype=torch.float)
+            # img = img.to('cuda')
+            # dmos = dmos.to('cuda')
+
 
             loss = model(img)
             criterion = nn.MSELoss()
@@ -76,6 +81,12 @@ def trainProcess(model, optimizer, scheduler, trainloader, testloader, snapshot_
                 optimizer.step()
                 scheduler.step()
                 optimizer.zero_grad()
+
+                if (step - 1) % t_total == 0:
+                    break
+
+            print("[{0}][{1}] Loss: {2:.4f}"
+                  .format(epoch, step, loss))
 
             if step % 10 == 0:
                 # model.train()
